@@ -26,3 +26,39 @@ function expense_tracker_enqueue_scripts() {
 
 }
 add_action('wp_enqueue_scripts', 'expense_tracker_enqueue_scripts');
+
+
+// Redirect users based on login status
+function expense_tracker_redirects() {
+    // Prevent this from running inside admin area
+    if ( is_admin() ) {
+        return;
+    }
+
+    $current_url = esc_url( home_url( add_query_arg( null, null ) ) );
+    $login_page  = home_url('/login');
+    $dashboard   = home_url('/dashboard');
+
+    // // If not logged in and not already on login page -> redirect to login
+    // if ( !is_user_logged_in() && $current_url !== $login_page ) {
+    //     wp_redirect( $login_page );
+    //     exit;
+    // }
+
+    // After login, redirect user to dashboard
+    add_filter('login_redirect', function($redirect_to, $request, $user) use ($dashboard) {
+        // Only redirect if login is successful and user is valid
+        if ( isset($user->ID) ) {
+            return $dashboard;
+        }
+        return $redirect_to;
+    }, 10, 3);
+
+    // If logged in and trying to access login page -> redirect to dashboard
+    if ( is_user_logged_in() && $current_url === $login_page ) {
+        wp_redirect( $dashboard );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'expense_tracker_redirects' );
+
