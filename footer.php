@@ -3,18 +3,26 @@
  * Theme Footer
  */
 ?>
-    </main> <!-- end main -->
+            </main> <!-- end main -->
+        </div> <!-- end flex-grow -->
+    </div> <!-- end d-flex -->
 
-    <footer class="bg-dark text-white py-4 mt-auto">
-        <div class="container text-center">
-            <p class="mb-1">
-                &copy; <?php echo date( 'Y' ); ?> <?php bloginfo( 'name' ); ?>. All rights reserved.
-            </p>
-            <small class="text-muted">
-                Built with ❤️ using WordPress + Bootstrap
-            </small>
-        </div>
+    <footer class="bg-dark text-white py-3 text-center">
+        <small>&copy; <?php echo date( 'Y' ); ?> <?php bloginfo( 'name' ); ?> | Built with ❤️ WordPress + Bootstrap</small>
     </footer>
+
+    <script>
+        // Sidebar toggle for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            if(toggle) {
+                toggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('d-none');
+                });
+            }
+        });
+    </script>
 
     <?php wp_footer(); ?>
 </body>

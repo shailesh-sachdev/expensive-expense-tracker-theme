@@ -1,6 +1,6 @@
 <?php
 /**
- * Theme Header
+ * Public Theme Header
  */
 ?>
 <!DOCTYPE html>
@@ -36,7 +36,7 @@
                         'menu_class'     => 'navbar-nav ms-auto mb-2 mb-lg-0',
                         'fallback_cb'    => '__return_false',
                         'depth'          => 2,
-                        'walker'         => new \Walker_Nav_Menu() // No custom navwalker, keeping it clean
+                        'walker'         => new \Walker_Nav_Menu()
                     ] );
                 ?>
             </div>
