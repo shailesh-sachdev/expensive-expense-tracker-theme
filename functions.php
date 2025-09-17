@@ -5,6 +5,8 @@
  * @package ExpensiveExpenseTracker
  */
 
+namespace Expensive;
+
 // Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -13,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Autoload Classes from /inc
  */
-spl_autoload_register( function ( $class ) {
+\spl_autoload_register( function ( $class ) {
     $prefix   = 'Expensive\\';
     $base_dir = get_template_directory() . '/inc/';
     $len      = strlen( $prefix );
@@ -29,8 +31,6 @@ spl_autoload_register( function ( $class ) {
         require $file;
     }
 } );
-
-namespace Expensive;
 
 class Theme {
     public function __construct() {
