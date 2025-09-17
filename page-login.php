@@ -1,27 +1,31 @@
 <?php
-/* Template Name: Login Page */
+/* Template Name: Login */
 get_header();
 ?>
 
-<div class="row justify-content-center">
-  <div class="col-md-4">
-    <div class="card">
-      <div class="card-header bg-dark text-white">Login</div>
-      <div class="card-body">
-        <?php
-        $args = array(
-            'redirect' => home_url(), 
-            'form_id' => 'loginform',
-            'label_username' => __( 'Username' ),
-            'label_password' => __( 'Password' ),
-            'label_remember' => __( 'Remember Me' ),
-            'label_log_in' => __( 'Login' ),
-            'remember' => true
-        );
-        wp_login_form($args);
-        ?>
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="card shadow-lg p-4" style="max-width: 420px; width: 100%; border-radius: 1rem;">
+    <h3 class="text-center mb-4 fw-bold">Welcome Back</h3>
+
+    <form method="post" action="<?php echo esc_url( wp_login_url() ); ?>">
+      <div class="mb-3">
+        <label for="user_login" class="form-label">Email / Username</label>
+        <input type="text" name="log" id="user_login" class="form-control form-control-lg" required>
       </div>
-    </div>
+
+      <div class="mb-3">
+        <label for="user_pass" class="form-label">Password</label>
+        <input type="password" name="pwd" id="user_pass" class="form-control form-control-lg" required>
+      </div>
+
+      <div class="d-grid mb-3">
+        <button type="submit" class="btn btn-dark btn-lg">Login</button>
+      </div>
+
+      <div class="text-center">
+        <a href="<?php echo esc_url( wp_registration_url() ); ?>">Create an account</a>
+      </div>
+    </form>
   </div>
 </div>
 

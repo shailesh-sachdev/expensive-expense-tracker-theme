@@ -1,47 +1,31 @@
 <?php
-/* Template Name: Register Page */
+/* Template Name: Register */
 get_header();
-
-if ( 'POST' == $_SERVER['REQUEST_METHOD'] && !empty($_POST['username']) && !empty($_POST['email']) ) {
-    $userdata = array(
-        'user_login' => sanitize_text_field($_POST['username']),
-        'user_email' => sanitize_email($_POST['email']),
-        'user_pass'  => $_POST['password'],
-        'role'       => 'member'
-    );
-
-    $user_id = wp_insert_user($userdata);
-
-    if (!is_wp_error($user_id)) {
-        echo '<div class="alert alert-success">Registration successful. <a href="'.wp_login_url().'">Login here</a>.</div>';
-    } else {
-        echo '<div class="alert alert-danger">Error: '.$user_id->get_error_message().'</div>';
-    }
-}
 ?>
 
-<div class="row justify-content-center">
-  <div class="col-md-4">
-    <div class="card">
-      <div class="card-header bg-dark text-white">Register</div>
-      <div class="card-body">
-        <form method="post">
-          <div class="mb-3">
-            <label>Username</label>
-            <input type="text" name="username" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label>Email</label>
-            <input type="email" name="email" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label>Password</label>
-            <input type="password" name="password" class="form-control" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Register</button>
-        </form>
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="card shadow-lg p-4" style="max-width: 480px; width: 100%; border-radius: 1rem;">
+    <h3 class="text-center mb-4 fw-bold">Create Account</h3>
+
+    <form method="post" action="<?php echo esc_url( site_url('wp-login.php?action=register', 'login_post') ); ?>">
+      <div class="mb-3">
+        <label for="user_login" class="form-label">Username</label>
+        <input type="text" name="user_login" id="user_login" class="form-control form-control-lg" required>
       </div>
-    </div>
+
+      <div class="mb-3">
+        <label for="user_email" class="form-label">Email</label>
+        <input type="email" name="user_email" id="user_email" class="form-control form-control-lg" required>
+      </div>
+
+      <div class="d-grid mb-3">
+        <button type="submit" class="btn btn-dark btn-lg">Register</button>
+      </div>
+
+      <div class="text-center">
+        <a href="<?php echo esc_url( wp_login_url() ); ?>">Already have an account?</a>
+      </div>
+    </form>
   </div>
 </div>
 
