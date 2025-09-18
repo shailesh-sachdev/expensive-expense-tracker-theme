@@ -8,7 +8,7 @@
     </div> <!-- end d-flex -->
 
     <footer class="bg-dark text-white py-3 text-center">
-        <small>&copy; <?php echo date( 'Y' ); ?> <?php bloginfo( 'name' ); ?> | Built with ❤️ WordPress + Bootstrap</small>
+        <small>&copy; <?php echo date( 'Y' ); ?> <?php bloginfo( 'name' ); ?> | Built with ❤️ WordPress + Bootstrap + Github</small>
     </footer>
 
     <script>
