@@ -6,6 +6,7 @@ class Auth {
 
     private function __construct() {
         add_action( 'template_redirect', [ $this, 'protect_pages' ] );
+         add_filter( 'login_redirect', [ $this, 'redirect_after_login' ], 10, 3 );
         // Future: add login form handling, registration, password reset
     }
 
