@@ -31,6 +31,8 @@ class Auth {
         if ( isset( $user->roles ) && in_array( 'administrator', $user->roles ) ) {
             return admin_url(); // keep admins in wp-admin
         }
-        return site_url( '/' );
+        else{
+            return site_url( '/dashboard' );
+        }
     }
 }
