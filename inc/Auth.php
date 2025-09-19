@@ -25,4 +25,12 @@ class Auth {
             }
         }
     }
+
+     public function redirect_after_login( $redirect_to, $requested_redirect_to, $user ) {
+        // Only redirect if login was successful and user is not admin
+        if ( isset( $user->roles ) && in_array( 'administrator', $user->roles ) ) {
+            return admin_url(); // keep admins in wp-admin
+        }
+        return site_url( '/dashboard' );
+    }
 }
