@@ -84,6 +84,14 @@ class Theme {
             '5.3.3',
             true
         );
+        // wp_localize_script('expensive-bootstrap', 'exp_ajax', ['ajaxurl' => admin_url('admin-ajax.php')]);
+        // Localize ajaxurl for frontend
+wp_localize_script( 'expensive-bootstrap', 'exp_ajax', [
+    'ajaxurl' => admin_url( 'admin-ajax.php' ),
+    'nonce_expense' => wp_create_nonce( 'exp_add_expense' ),
+    'nonce_income'  => wp_create_nonce( 'exp_add_income' ),
+] );
+
     }
 
     /**
