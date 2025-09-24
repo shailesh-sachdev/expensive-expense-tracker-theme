@@ -90,6 +90,7 @@ wp_localize_script( 'expensive-bootstrap', 'exp_ajax', [
     'ajaxurl' => admin_url( 'admin-ajax.php' ),
     'nonce_expense' => wp_create_nonce( 'exp_add_expense' ),
     'nonce_income'  => wp_create_nonce( 'exp_add_income' ),
+    'nonce'   => wp_create_nonce('exp_family_nonce')
 ] );
 
     }
@@ -127,3 +128,14 @@ wp_localize_script( 'expensive-bootstrap', 'exp_ajax', [
 
 // Initialize theme
 Theme::get_instance();
+// Load Install class
+require_once get_template_directory() . '/inc/class-install.php';
+
+// Run activation tasks when theme is switched
+add_action('after_switch_theme', function() {
+    \Expensive\Install::activate();
+    \Expensive\Install::migrate_transactions();
+});
+require_once get_template_directory() . '/inc/Family_Members.php';
+
+\Expensive\Family_Members::get_instance();
