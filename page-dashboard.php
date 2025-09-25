@@ -9,6 +9,7 @@ if ( ! is_user_logged_in() ) {
     exit;
 }
 use Expensive\Expenses;
+use Expensive\Cards;
 
 // Get all transactions for current user
 $selected_month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
@@ -16,6 +17,8 @@ $selected_year  = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
 
 $transactions   = Expenses::get_user_transactions(null, $selected_month, $selected_year);
 $family_totals  = Expenses::get_family_totals(null, $selected_month, $selected_year);
+$cards_class = Cards::get_instance();
+$user_cards  = $cards_class->get_cards();
 
 // Initialize totals
 $total_income = 0;
@@ -90,7 +93,7 @@ $family_members  = $wpdb->get_results(
         </button>
     </div>
         <div class="col-md-3">
-            <a href="#" class="btn btn-outline-warning w-100 py-3">Manage Credit Cards</a>
+            <a href="<?php echo esc_url(home_url('/credit-cards/')); ?>" class="btn btn-outline-warning w-100 py-3">Manage Credit Cards</a>
         </div>
         <div class="col-md-3">
             <a href="#" class="btn btn-outline-danger w-100 py-3">Manage Loans</a>
@@ -135,29 +138,7 @@ $family_members  = $wpdb->get_results(
     </div>
 </div>
 
-<!-- Family Members Card -->
-<div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Family Members</h5>
-        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addFamilyMemberModal">
-            + Add Family Member
-        </button>
-    </div>
-    <div class="card-body">
-        <?php if ( empty( $family_members ) ) : ?>
-            <p>No family members added yet.</p>
-        <?php else : ?>
-            <ul class="list-group list-group-flush">
-                <?php foreach ( $family_members as $member ) : ?>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <?php echo esc_html( $member['name'] ); ?>
-                        <span class="badge bg-primary rounded-pill"><?php echo esc_html( ucfirst($member['role']) ); ?></span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-    </div>
-</div>
+
 
 <form method="get" class="mb-4">
     <label for="month">Month:</label>
@@ -180,84 +161,97 @@ $family_members  = $wpdb->get_results(
 
     <button type="submit">Filter</button>
 </form>
-<h3>All Transactions</h3>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Category</th>
-            <th>Payment Method</th>
-            <th>Family Member</th>
-            <th>Comment</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if ( ! empty( $transactions ) ) : ?>
-            <?php foreach ( $transactions as $t ) : ?>
-                <tr>
-                    <td><?php echo esc_html( $t['date'] ); ?></td>
-                    <td><?php echo ucfirst( esc_html( $t['type'] ) ); ?></td>
-                    <td><?php echo esc_html( $t['amount'] ); ?></td>
-                    <td><?php echo esc_html( $t['category'] ); ?></td>
-                    <td><?php echo esc_html( $t['payment_method'] ); ?></td>
-                    <td>
-                        <?php 
-                        if ( $t['family_member_id'] ) {
-                            global $wpdb;
-                            $fm_table = $wpdb->prefix . 'exp_family_members';
-                            $name = $wpdb->get_var( $wpdb->prepare("SELECT name FROM $fm_table WHERE id = %d", $t['family_member_id']) );
-                            echo esc_html( $name );
-                        } else {
-                            echo "—";
-                        }
-                        ?>
-                    </td>
-                    <td><?php echo esc_html( $t['comment'] ); ?></td>
-                </tr>
-            <?php endforeach; ?>
-        <?php else : ?>
+<h3 class="mt-4 mb-3">All Transactions</h3>
+<div class="table-responsive mb-4">
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-dark">
             <tr>
-                <td colspan="7">No transactions yet.</td>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Category</th>
+                <th>Payment Method</th>
+                <th>Family Member</th>
+                <th>Comment</th>
             </tr>
-        <?php endif; ?>
-    </tbody>
-</table>
-<h3>Family Totals</h3>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-    <thead>
-        <tr>
-            <th>Family Member</th>
-            <th>Role</th>
-            <th>Total Income</th>
-            <th>Total Expense</th>
-            <th>Balance</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if ( ! empty( $family_totals ) ) : ?>
-            <?php foreach ( $family_totals as $f ) : ?>
+        </thead>
+        <tbody>
+            <?php if ( ! empty( $transactions ) ) : ?>
+                <?php foreach ( $transactions as $t ) : ?>
+                    <tr>
+                        <td><?php echo esc_html( $t['date'] ); ?></td>
+                        <td><?php echo ucfirst( esc_html( $t['type'] ) ); ?></td>
+                        <td>₹<?php echo number_format( $t['amount'], 2 ); ?></td>
+                        <td><?php echo esc_html( $t['category'] ); ?></td>
+                        <td>
+                            <?php
+                            if ( $t['payment_method'] != 'cash' ) {
+                                global $wpdb;
+                                $cc_table = $wpdb->prefix . 'exp_credit_cards';
+                                $card_id = intval(str_replace('credit_card_', '', $t['payment_method']));
+                                $card = $wpdb->get_row( $wpdb->prepare("SELECT card_name, last_digits FROM $cc_table WHERE id = %d", $card_id) );
+                                echo $card ? esc_html( $card->card_name . ' (****' . $card->last_digits . ')' ) : 'Unknown Card';
+                            } else {
+                                echo 'Cash';
+                            }
+                            ?>
+                        </td>
+                        <td>
+                            <?php 
+                            if ( $t['family_member_id'] ) {
+                                global $wpdb;
+                                $fm_table = $wpdb->prefix . 'exp_family_members';
+                                $name = $wpdb->get_var( $wpdb->prepare("SELECT name FROM $fm_table WHERE id = %d", $t['family_member_id']) );
+                                echo esc_html( $name );
+                            } else {
+                                echo "—";
+                            }
+                            ?>
+                        </td>
+                        <td><?php echo esc_html( $t['comment'] ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else : ?>
                 <tr>
-                    <td><?php echo esc_html( $f['name'] ); ?></td>
-                    <td><?php echo esc_html( ucfirst($f['role']) ); ?></td>
-                    <td><?php echo number_format( $f['total_income'], 2 ); ?></td>
-                    <td><?php echo number_format( $f['total_expense'], 2 ); ?></td>
-                    <td>
-                        <?php 
-                        $balance = $f['total_income'] - $f['total_expense'];
-                        echo number_format( $balance, 2 );
-                        ?>
-                    </td>
+                    <td colspan="7" class="text-center">No transactions yet.</td>
                 </tr>
-            <?php endforeach; ?>
-        <?php else : ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
+
+<h3 class="mt-5 mb-3">Family Totals</h3>
+<div class="table-responsive mb-4">
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-dark">
             <tr>
-                <td colspan="5">No family members added yet.</td>
+                <th>Family Member</th>
+                <th>Role</th>
+                <th>Total Income</th>
+                <th>Total Expense</th>
+                <th>Balance</th>
             </tr>
-        <?php endif; ?>
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            <?php if ( ! empty( $family_totals ) ) : ?>
+                <?php foreach ( $family_totals as $f ) : ?>
+                    <tr>
+                        <td><?php echo esc_html( $f['name'] ); ?></td>
+                        <td><?php echo esc_html( ucfirst($f['role']) ); ?></td>
+                        <td>₹<?php echo number_format( $f['total_income'], 2 ); ?></td>
+                        <td>₹<?php echo number_format( $f['total_expense'], 2 ); ?></td>
+                        <td>₹<?php echo number_format( $f['total_income'] - $f['total_expense'], 2 ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <tr>
+                    <td colspan="5" class="text-center">No family members added yet.</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
+
 <!-- Add Expense Modal -->
 <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -290,7 +284,13 @@ $family_members  = $wpdb->get_results(
             <label class="form-label">Payment Method</label>
             <select name="payment_method" class="form-select">
               <option value="cash">Cash</option>
-              <option value="credit_card">Credit Card</option>
+              <?php if (!empty($user_cards)): ?>
+                <?php foreach ($user_cards as $card): ?>
+                    <option value="credit_card_<?php echo esc_attr($card['id']); ?>">
+                        <?php echo esc_html($card['card_name'] . ' (****' . $card['last_digits'] . ')'); ?>
+                    </option>
+                <?php endforeach; ?>
+            <?php endif; ?>
             </select>
           </div>
           <div class="mb-3">

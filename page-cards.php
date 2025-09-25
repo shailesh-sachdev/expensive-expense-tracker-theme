@@ -2,72 +2,157 @@
 /* Template Name: Cards */
 get_header();
 
+use Expensive\Cards;
+
 if ( ! is_user_logged_in() ) {
     wp_redirect( site_url('/login') );
     exit;
 }
+
+$cards_class = Cards::get_instance();
+$user_cards  = $cards_class->get_cards();
 ?>
 
-<div class="container-fluid">
-  <div class="row vh-100">
-    <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2 bg-dark text-white d-flex flex-column p-3">
-      <h4 class="fw-bold mb-4">💸 Expensive</h4>
-      <nav class="nav flex-column">
-        <a href="<?php echo site_url('/dashboard'); ?>" class="nav-link text-white">Dashboard</a>
-        <a href="<?php echo site_url('/expenses'); ?>" class="nav-link text-white">Expenses</a>
-        <a href="<?php echo site_url('/cards'); ?>" class="nav-link text-white active">Cards</a>
-        <a href="<?php echo site_url('/loans'); ?>" class="nav-link text-white">Loans</a>
-      </nav>
-      <div class="mt-auto">
-        <a href="<?php echo wp_logout_url( site_url('/login') ); ?>" class="btn btn-outline-light w-100">Logout</a>
-      </div>
+<div class="container py-4">
+    <h2 class="mb-4">💳 Credit Cards</h2>
+
+    <!-- Quick Action Buttons -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#addCardModal">
+                + Add Credit Card
+            </button>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-warning w-100 py-3" data-bs-toggle="modal" data-bs-target="#uploadPDFModal">
+                Upload Statement
+            </button>
+        </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="col-md-9 col-lg-10 p-5">
-      <h2 class="fw-bold mb-4">Credit Cards</h2>
-
-      <div class="card shadow-sm p-4 mb-4">
-        <h5 class="fw-bold">Register New Card</h5>
-        <form>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Card Name</label>
-              <input type="text" class="form-control" placeholder="e.g. HDFC Visa">
+    <!-- Cards List -->
+    <div class="row g-3">
+        <?php if (!empty($user_cards)): ?>
+            <?php foreach ($user_cards as $card): ?>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong><?php echo esc_html($card['card_name']); ?></strong><br>
+                                <small class="text-muted">Bill: <?php echo esc_html($card['billing_date']); ?> | Due: <?php echo esc_html($card['due_date']); ?></small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger delete-card" data-id="<?php echo esc_attr($card['id']); ?>">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="col-12">
+                <div class="card shadow-sm border-0 p-3 text-center text-muted">
+                    No credit cards added yet.
+                </div>
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Bill Date</label>
-              <input type="date" class="form-control">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Due Date</label>
-              <input type="date" class="form-control">
-            </div>
-          </div>
-          <div class="mt-3">
-            <button class="btn btn-dark">Save Card</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="card shadow-sm p-4 mb-4">
-        <h5 class="fw-bold">Upload CC Statement (PDF)</h5>
-        <form enctype="multipart/form-data">
-          <input type="file" class="form-control mb-3">
-          <button class="btn btn-outline-dark">Upload & Parse</button>
-        </form>
-      </div>
-
-      <h5 class="fw-bold mb-3">Your Cards</h5>
-      <ul class="list-group">
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          HDFC Visa
-          <span class="badge bg-dark rounded-pill">Due: 2025-09-30</span>
-        </li>
-      </ul>
+        <?php endif; ?>
     </div>
-  </div>
 </div>
+
+<!-- Add Card Modal -->
+<div class="modal fade" id="addCardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="add-card-form">
+                <?php wp_nonce_field('exp_card_nonce', 'exp_card_nonce_field'); ?>
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Credit Card</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Card Name</label>
+                        <input type="text" name="card_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last 4 Digits</label>
+                        <input type="text" name="last_digits" class="form-control" maxlength="4" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bill Date (1-31)</label>
+                        <input type="number" name="billing_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date (1-31)</label>
+                        <input type="number" name="due_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Card Limit</label>
+                        <input type="number" name="card_limit" class="form-control" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary w-100">Save Card</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Upload PDF Modal -->
+<div class="modal fade" id="uploadPDFModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="upload-statement-form" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Credit Card Statement (PDF)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" name="pdf_file" class="form-control" accept=".pdf" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-warning w-100">Upload & Parse</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function($){
+    // Add Card
+    $('#add-card-form').on('submit', function(e){
+        e.preventDefault();
+        var data = $(this).serializeArray();
+        data.push({name:'action', value:'exp_add_card'});
+        data.push({name:'nonce', value: $('#exp_card_nonce_field').val() });
+
+        $.post('<?php echo admin_url("admin-ajax.php"); ?>', data, function(response){
+            if(response.success){
+                location.reload();
+            } else {
+                alert(response.data || 'Failed to add card');
+            }
+        });
+    });
+
+    // Delete Card
+    $('.delete-card').on('click', function(){
+        if(!confirm('Delete this card?')) return;
+        var btn = $(this);
+        var id = btn.data('id');
+
+        $.post('<?php echo admin_url("admin-ajax.php"); ?>', {
+            action: 'exp_delete_card',
+            nonce: '<?php echo wp_create_nonce("exp_card_nonce"); ?>',
+            id: id
+        }, function(response){
+            if(response.success){
+                btn.closest('.col-md-4').remove();
+            } else {
+                alert(response.data || 'Delete failed');
+            }
+        });
+    });
+});
+</script>
 
 <?php get_footer(); ?>

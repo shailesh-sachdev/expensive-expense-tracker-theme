@@ -37,10 +37,27 @@ class Install {
             PRIMARY KEY (id),
             KEY user_id (user_id)
         ) $charset_collate;";
+        
+    // Credit Cards Table
+    $table_cc = $wpdb->prefix . "exp_credit_cards";
+    $sql_cc = "CREATE TABLE $table_cc (
+        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        user_id BIGINT(20) UNSIGNED NOT NULL,
+        card_name VARCHAR(100) NOT NULL,
+        last_digits VARCHAR(4) NOT NULL,
+        card_limit DECIMAL(12,2) NOT NULL DEFAULT 0,
+        billing_date INT(2) NOT NULL, 
+        due_date INT(2) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY user_id (user_id)
+    ) $charset_collate;";
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
         dbDelta( $sql2 );
+        dbDelta( $sql_cc );
 
     }
     public static function migrate_transactions() {
