@@ -53,11 +53,28 @@ class Install {
         PRIMARY KEY (id),
         KEY user_id (user_id)
     ) $charset_collate;";
+    $table_statements = $wpdb->prefix . "exp_statements";
+    $sql_statements = "CREATE TABLE IF NOT EXISTS wp_exp_statements (
+
+        id INT(11) NOT NULL AUTO_INCREMENT,
+
+        file_name VARCHAR(255) NOT NULL,
+
+        file_path VARCHAR(512) NOT NULL,
+
+        password VARCHAR(255) DEFAULT NULL,
+
+        uploaded_at DATETIME NOT NULL,
+
+        PRIMARY KEY (id)
+
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
         dbDelta( $sql2 );
         dbDelta( $sql_cc );
+        dbDelta( $sql_statements );
 
     }
     public static function migrate_transactions() {
